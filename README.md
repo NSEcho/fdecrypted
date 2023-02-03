@@ -3,7 +3,7 @@ Download file or executable from the application bundle directory using frida-go
 
 # Installation
 ```bash
-$ go install github.com/lateralusd/fdecrypted
+$ go install github.com/lateralusd/fdecrypted@latest
 ```
 
 # Usage
