@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/frida/frida-go/frida"
 )
@@ -18,22 +20,23 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s DATA\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "Example: %s Gadget\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Example: %s Gadget:some_filename.json\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Example: %s Gadget:[BDL]:some_filename.json\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	var target, filename string
+	var target, filename, targetDir string
 	isFile := false
 
 	if strings.Contains(os.Args[1], ":") {
 		splitted := strings.Split(os.Args[1], ":")
-		if len(splitted) != 2 {
-			fmt.Fprintln(os.Stderr, "filename should be in format APP_NAME:FILENAME")
+		if len(splitted) != 3 {
+			fmt.Fprintln(os.Stderr, "filename should be in format APP_NAME:DIR:FILENAME")
 			os.Exit(1)
 		}
 		isFile = true
 		target = splitted[0]
-		filename = splitted[1]
+		targetDir = splitted[1]
+		filename = splitted[2]
 	} else {
 		target = os.Args[1]
 	}
@@ -73,10 +76,21 @@ func main() {
 	})
 	script.Load()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	if isFile {
-		script.ExportsCall("download_file", filename)
+		err := script.ExportsCallWithContext(ctx, "download_file", targetDir, filename)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error fetching file")
+			os.Exit(1)
+		}
 	} else {
-		script.ExportsCall("download_bin")
+		err := script.ExportsCallWithContext(ctx, "download_bin")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error fetching file")
+			os.Exit(1)
+		}
 	}
 	<-done
 	fmt.Printf("[*] Saved \"%s\" (%d bytes)\n", name, length)

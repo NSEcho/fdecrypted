@@ -11,12 +11,23 @@ Filename is relative to the application bundle directory.
 
 ## file mode
 
-`fdecrypted APP:FILENAME`
+`fdecrypted APP:DIR:FILENAME`
 
-Example downloading `some_filename.json` from the application that the Gadget is attached to.
+Possible `DIR` flags include:
+* `B` - Applications bundle path
+* `D` - Applications directory path
+* `L` - Applications library path
+
+Example downloading `some_filename.json` from the application bundle that the Gadget is attached to.
 
 ```bash
-$ fdecrypted Gadget:some_filename.json
+$ fdecrypted Gadget:B:some_filename.json
+```
+
+Example downloading plist file from library directory:
+
+```bash
+$ fdecrypted Gadget:L:Preferences/com.example.app.plist
 ```
 
 ## executable mode
